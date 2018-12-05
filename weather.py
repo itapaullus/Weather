@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
         # Обязательно нужно вызвать метод супер класса
         QMainWindow.__init__(self)
 
-        self.setMinimumSize(QSize(480, 80))  # Устанавливаем размеры
+        self.setMinimumSize(QSize(640, 120))  # Устанавливаем размеры
         self.setWindowTitle("Работа с QTableWidget")  # Устанавливаем заголовок окна
         central_widget = QWidget(self)  # Создаём центральный виджет
         self.setCentralWidget(central_widget)  # Устанавливаем центральный виджет
@@ -177,24 +177,29 @@ class MainWindow(QMainWindow):
         table.setRowCount(len(data))  # и одну строку в таблице
 
         # Устанавливаем заголовки таблицы
-        table.setHorizontalHeaderLabels(["Header 1", "Header 2", "Header 3"])
+        table.setHorizontalHeaderLabels(["Город", "Страна", "Ширина","Долгота","???"])
 
         # Устанавливаем всплывающие подсказки на заголовки
-        table.horizontalHeaderItem(0).setToolTip("Column 1 ")
-        table.horizontalHeaderItem(1).setToolTip("Column 2 ")
-        table.horizontalHeaderItem(2).setToolTip("Column 3 ")
+        table.horizontalHeaderItem(0).setToolTip("Город")
+        table.horizontalHeaderItem(1).setToolTip("Страна")
+        table.horizontalHeaderItem(2).setToolTip("Ширина")
+        table.horizontalHeaderItem(3).setToolTip("Ширина")
+        table.horizontalHeaderItem(4).setToolTip("Ширина")
 
         # Устанавливаем выравнивание на заголовки
-        table.horizontalHeaderItem(0).setTextAlignment(Qt.AlignLeft)
+        table.horizontalHeaderItem(0).setTextAlignment(Qt.AlignHCenter)
         table.horizontalHeaderItem(1).setTextAlignment(Qt.AlignHCenter)
-        table.horizontalHeaderItem(2).setTextAlignment(Qt.AlignRight)
+        table.horizontalHeaderItem(2).setTextAlignment(Qt.AlignHCenter)
+        table.horizontalHeaderItem(3).setTextAlignment(Qt.AlignHCenter)
+        table.horizontalHeaderItem(4).setTextAlignment(Qt.AlignHCenter)
 
         # заполняем первую строку
         i = 0
         for index, city in data.items():
             table.setItem(i, 0, QTableWidgetItem(city.name))
             table.setItem(i, 1, QTableWidgetItem(city.country))
-            table.setItem(i, 2, QTableWidgetItem(city.coord.get('len')))
+            table.setItem(i, 2, QTableWidgetItem(city.coord.get('lon')))
+            table.setItem(i, 3, QTableWidgetItem(city.coord.get('lat')))
             i += 1
 
         # делаем ресайз колонок по содержимому
