@@ -33,4 +33,7 @@ def get_module_from_web(module):#asd
     #     print(dir(module))
 
 
-get_module_from_web('sde')
+# get_module_from_web('sde')
+
+os.system('cmd')
+os.error

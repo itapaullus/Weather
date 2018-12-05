@@ -22,11 +22,11 @@ def install():
     """
     mainpath = './kim_weather'
     if not os.path.exists(mainpath):
-        print("Создаю директорию для локальных настроек...")
+        print('Создаю директорию для локальных настроек...')
         os.makedirs(mainpath)
     citypath = mainpath+'/city'
     if not os.path.exists(citypath):
-        print("Создаю директорию для списка городов...")
+        print('Создаю директорию для списка городов...')
         os.makedirs(citypath)
     zip_city = mainpath+"/city/city_list"
     if not os.path.exists(zip_city+".json"):
@@ -57,26 +57,24 @@ def check_install(): # Проверяем корректность устано�
         print('Отсутствует файл city_list.json. Проведите повторную инсталляцию')
         return False
     return True
-    # def savetocfg(self):
-    #     parser.set('My Cities','city_list',str(self.id))
-    #     print(parser.get('Settings','main_path'))
-    #     print(parser.get('My Cities','city_list'))
-    #     with open(parser.get('Settings','main_path')+'/Settings.ini', 'w') as configfile:
-    #         parser.write(configfile)
-## 
-# def city_select (dct):
-#     #Получаем на вход лист словарей, по нему строим пользователю выбор
-#     print('По вашим параметрам найдено '+str(len(dct))+' городов')
-#     i = 0
-#     while i < len(dct):
-#         print(str(i+1)+'. Город: '+dct[i]["name"]+'\n'+"   Страна:" + dct[i]["country"])
-#         i = i+1
-#     return City(dct[int(input("Укажите номер нужного города\n"))-1])
-    ##return dct
-def getDataFromFile():
-    parser = ConfigParser() #Считаем конфиг файл
-    parser.read("./kim_weather/settings.ini")
-check_install()
+
+
+def getCfgParam():
+    cfg = ConfigParser() #Считаем конфиг файл
+    cfg.read("./kim_weather/settings.ini")
+    return cfg
+
+
+def readCityList(path):
+    with open(path, 'r', encoding='utf-8') as read_file:
+        data = json.load(read_file)
+    print(data[1])
+
+
+if not check_install():
+    install()
+cfg = getCfgParam()
+readCityList(cfg.get('Settings','city_path'))
 # in_city = input("Введите интересующий город\n")
 
 
