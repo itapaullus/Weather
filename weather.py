@@ -1,6 +1,8 @@
 import urllib.request,os,zipfile,gzip,shutil,json,weather_ui, urllib.error as er
 from configparser import ConfigParser, NoOptionError
 from termcolor import colored
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTableWidget, QTableWidgetItem
+from PyQt5.QtCore import QSize, Qt
 class City:
     def __init__(self,dct):
         self.id = dct['id']
@@ -132,6 +134,12 @@ def readCityList(path):
         data[city['id']] = City(city['id'], city['name'], city['country'], city['coord'])
     return data
 
+def setmydata(self):
+    for column, key in enumerate(self.data):
+        for row, item in enumerate(self.data[key]):
+            newitem = QTableWidgetItem(item)
+            self.setItem(row, column, newitem)
+
 
 
 
@@ -143,3 +151,60 @@ data = readCityList(cfg.get('Settings','city_file'))
 
 # readCityList('./kim_weather/city/city_list.json')
 # in_city = input("Введите интересующий город\n")
+
+# Наследуемся от QMainWindow
+class MainWindow(QMainWindow):
+    def setmydata(self):
+        for column, key in enumerate(self.data):
+            for row, item in enumerate(self.data[key]):
+                newitem = QTableWidgetItem(item)
+                self.setItem(row, column, newitem)
+    # Переопределяем конструктор класса
+    def __init__(self):
+        # Обязательно нужно вызвать метод супер класса
+        QMainWindow.__init__(self)
+
+        self.setMinimumSize(QSize(480, 80))  # Устанавливаем размеры
+        self.setWindowTitle("Работа с QTableWidget")  # Устанавливаем заголовок окна
+        central_widget = QWidget(self)  # Создаём центральный виджет
+        self.setCentralWidget(central_widget)  # Устанавливаем центральный виджет
+
+        grid_layout = QGridLayout()  # Создаём QGridLayout
+        central_widget.setLayout(grid_layout)  # Устанавливаем данное размещение в центральный виджет
+
+        table = QTableWidget(self)  # Создаём таблицу
+        table.setColumnCount(5)  # Устанавливаем три колонки
+        table.setRowCount(len(data))  # и одну строку в таблице
+
+        # Устанавливаем заголовки таблицы
+        table.setHorizontalHeaderLabels(["Header 1", "Header 2", "Header 3"])
+
+        # Устанавливаем всплывающие подсказки на заголовки
+        table.horizontalHeaderItem(0).setToolTip("Column 1 ")
+        table.horizontalHeaderItem(1).setToolTip("Column 2 ")
+        table.horizontalHeaderItem(2).setToolTip("Column 3 ")
+
+        # Устанавливаем выравнивание на заголовки
+        table.horizontalHeaderItem(0).setTextAlignment(Qt.AlignLeft)
+        table.horizontalHeaderItem(1).setTextAlignment(Qt.AlignHCenter)
+        table.horizontalHeaderItem(2).setTextAlignment(Qt.AlignRight)
+
+        # заполняем первую строку
+        i = 0
+        for index, city in data.items():
+            table.setItem(i, 0, QTableWidgetItem(city.name))
+            table.setItem(i, 1, QTableWidgetItem(city.country))
+            table.setItem(i, 2, QTableWidgetItem(city.coord.get('len')))
+            i += 1
+
+        # делаем ресайз колонок по содержимому
+        table.resizeColumnsToContents()
+
+        grid_layout.addWidget(table, 0, 0)  # Добавляем таблицу в сетку
+
+import sys
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    mw = MainWindow()
+    mw.show()
+    sys.exit(app.exec())
