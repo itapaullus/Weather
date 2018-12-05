@@ -41,8 +41,7 @@ def install():
         config.set("Settings", "main_path", mainpath)
         config.set("Settings", "city_path", mainpath+'/city')
         config.set("Settings", "city_url", 'http://bulk.openweathermap.org/sample/city.list.json.gz')
-        with open(cfgpath,"w") as config_file:
-            config.write(config_file)
+        saveconfig(config)
     else:
         print("    Читаю конфигурацию...")
         config = getCfgParam()
@@ -114,7 +113,7 @@ def check_install(): # Проверяем корректность устано�
 
 def getCfgParam():
     cfg = ConfigParser() #Считаем конфиг файл
-    cfg.read("./kim_weather/settings.ini")
+    cfg.read("./kim_weather/Settings.ini")
     return cfg
 
 
