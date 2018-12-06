@@ -143,7 +143,7 @@ def setmydata(self):
 
 
 
-# install()
+install()
 cfg = getCfgParam()
 cfg.set('Settings', 'city_file', './kim_weather/city/city_list.json')
 saveconfig(cfg)
@@ -191,7 +191,7 @@ class MainWindow(QMainWindow):
         table.horizontalHeaderItem(1).setTextAlignment(Qt.AlignHCenter)
         table.horizontalHeaderItem(2).setTextAlignment(Qt.AlignHCenter)
         table.horizontalHeaderItem(3).setTextAlignment(Qt.AlignHCenter)
-        table.horizontalHeaderItem(4).setTextAlignment(Qt.AlignHCenter)
+        table.horizontalHeaderItem(4).setTextAlignment(Qt.AlignHCenter) #
 
         # заполняем первую строку
         i = 0
