@@ -168,7 +168,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Работа с QTableWidget")  # Устанавливаем заголовок окна
         central_widget = QWidget(self)  # Создаём центральный виджет
         self.setCentralWidget(central_widget)  # Устанавливаем центральный виджет
-
         grid_layout = QGridLayout()  # Создаём QGridLayout
         central_widget.setLayout(grid_layout)  # Устанавливаем данное размещение в центральный виджет
 
