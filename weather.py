@@ -1,27 +1,26 @@
-import urllib.request,os,zipfile,gzip,shutil,json,weather_ui, urllib.error as er
+import urllib.request, os, gzip, shutil, json, urllib.error as er
 from configparser import ConfigParser, NoOptionError
 from termcolor import colored
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QWidget, QTableWidget, QTableWidgetItem
-from PyQt5.QtCore import QSize, Qt
-class City:
-    def __init__(self,dct):
-        self.id = dct['id']
-        self.name = dct['name']
-        self.country = dct['country']
-        self.coord = dict(lon=dct['coord']['lon'],lat=dct['coord']['lat'])
+
 
 def err_print(string):
     print(colored(string, 'red'))
 
+
 def ok_print(string):
-    print(colored(string, 'green'))
+    print(colored(string, 'yellow'))
+
+
+def ask_print(string):
+    print(colored(string, 'blue'))
+
 
 def saveconfig(cfg):
     with open(cfg.get("Settings", "main_path") + '/Settings.ini', "w") as config_file:
         cfg.write(config_file)
 
 
-##Стартовые проверки настроек и служебных файлов
+# Стартовые проверки настроек и служебных файлов
 def install():
     """
 Первоначальная установка необходимых файлов
@@ -43,10 +42,11 @@ def install():
         config.set("Settings", "main_path", mainpath)
         config.set("Settings", "city_path", mainpath+'/city')
         config.set("Settings", "city_url", 'http://bulk.openweathermap.org/sample/city.list.json.gz')
+        config.set("Settings", "city_file", mainpath+'/city/' + 'city_list.json')
         saveconfig(config)
     else:
         print("    Читаю конфигурацию...")
-        config = getCfgParam()
+        config = getcfgparam()
 
     # Создаем директорию для городов
     try:
@@ -67,54 +67,73 @@ def install():
         print("    Загружаю с openweathermap.org список городов...")
         try:
             url = config.get("Settings", "city_url")
-            urllib.request.urlretrieve(url,zip_city+".gz")
+            urllib.request.urlretrieve(url, zip_city+".gz")
         except er.URLError:
             err_print('    Указанный в конфигурации URL недоступен! {}'.format(url))
             err_print('    Проверьте валидность URL в файле {}!'.format(cfgpath))
-            return False
-        except er.HTTPError:
-            err_print('    Ошибка загрузки файла city_list! Проверьте интернет-соединение')
             return False
         config.set("Settings", "city_file", zip_city+".json")
         print("    Распаковываю файл...")
         with gzip.open(zip_city+".gz", 'rb') as f_in:
             with open(zip_city+'.json', 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
+
         print("    Удаляю архив...")
         os.remove(zip_city+".gz")
     else:
         print('    Список городов уже загружен...')
-    ok_print("kim_weather успешно установлен!")
+    print('Запускаем повторную проверку установки...')
+
+    if check_install():
+        ok_print("kim_weather успешно установлен!")
+    else:
+        err_print('Не удалось провести корректную установку. Попробуйте установить значений Settings.ini вручную')
 
 
-def check_install(): # Проверяем корректность установки
+def check_install():  # Проверяем корректность установки
     """
 Проверяем целостность необходимых файлов
-    :return: null
+    :return: boolean
     """
-    if not os.path.exists("./kim_weather/settings.ini"):
-        print('Отсутствует файл settings.ini. Проведите повторную инсталляцию!')
+    ok_print('Проверяем целостность установки...')
+    if not os.path.exists("./kim_weather/Settings.ini"):
+        err_print('Отсутствует файл settings.ini. Проведите повторную инсталляцию!')
         return False
-    if not os.path.exists('./kim_weather/city/city_list.json'):
-        print('Отсутствует файл city_list.json. Проведите повторную инсталляцию!')
-        return False
-    cfg = getCfgParam()
+
+    cfg = getcfgparam()
     try:
-        cfg.get('Settings', 'main_path')
+        main = cfg.get('Settings', 'main_path')
+        ok_print('    main_path установлен: {}'.format(main))
     except NoOptionError:
-        err_print('Не установлено значение атрибута "main_path"!')
+        err_print('    Не установлено значение атрибута "main_path"!')
         return False
 
     try:
-        cfg.get('Settings', 'city_path')
+        citypath = cfg.get('Settings', 'city_path')
+        ok_print('    city_path установлен: {}'.format(citypath))
     except NoOptionError:
-        err_print('Не установлено значение атрибута "city_path"!')
+        err_print('    Не установлено значение атрибута "city_path"!')
         return False
+
+    try:
+        url = cfg.get('Settings', 'city_url')
+        ok_print('    city_url установлен: {}'.format(url))
+    except NoOptionError:
+        err_print('    Не установлено значение атрибута "city_url"')
+        return False
+
+    try:
+        file = cfg.get('Settings', 'city_file')
+        ok_print('    city_file установлен: {}'.format(file))
+    except NoOptionError:
+        err_print('    Не установлено значение атрибута "city_file"')
+        return False
+    ok_print('Проверено успешно')
     return True
 
 
-def getCfgParam():
-    cfg = ConfigParser() #Считаем конфиг файл
+def getcfgparam() -> ConfigParser:
+    cfg = ConfigParser()  # Считаем конфиг файл
     cfg.read("./kim_weather/Settings.ini")
     return cfg
 
@@ -126,7 +145,8 @@ class City:
         self.country = country
         self.coord = coord
 
-def readCityList(path):
+
+def read_city_list(path):
     with open(path, 'r', encoding='utf-8') as read_file:
         datalist = json.load(read_file)
     data = dict()
@@ -134,81 +154,39 @@ def readCityList(path):
         data[city['id']] = City(city['id'], city['name'], city['country'], city['coord'])
     return data
 
-def setmydata(self):
-    for column, key in enumerate(self.data):
-        for row, item in enumerate(self.data[key]):
-            newitem = QTableWidgetItem(item)
-            self.setItem(row, column, newitem)
+
+def ask_request_city(indata):
+    ask_print('Введите интересующий город:')
+    ask_resp = input()
+    result = list()
+    for key, value in indata.items():
+        if ask_resp.upper() in value.name.upper():
+            result.append(indata[key])
+            print(str(len(result)) + ': ' + indata[key].country + ', ' + indata[key].name)
+    len_result = len(result)
+    if len_result == 0:
+        print('Не найдено ни одного города. Попробуйте еще раз...')
+        ask_request_city(indata)
+    elif len_result == 1:
+        print('Подтвердите выбор города: (y/n)')
+        ans = input()
+        if ans in ['Y', 'y']:
+            return result[0]
+        else:
+            ask_request_city(indata)
+    else:
+        print('Нашлось дохуя, подумаю завтра')
+    #     print(str(num) + ': '+i.name)
 
 
+if not check_install():
+    print('Проверка целостности файлов не пройдена')
+    install()
+cfg = getcfgparam()
+data = read_city_list(cfg.get('Settings', 'city_file'))
 
+ask_request_city(data)
 
-install()
-cfg = getCfgParam()
-cfg.set('Settings', 'city_file', './kim_weather/city/city_list.json')
-saveconfig(cfg)
-data = readCityList(cfg.get('Settings','city_file'))
-
-# readCityList('./kim_weather/city/city_list.json')
+# read_city_list('./kim_weather/city/city_list.json')
 # in_city = input("Введите интересующий город\n")
 
-# Наследуемся от QMainWindow
-class MainWindow(QMainWindow):
-    def setmydata(self):
-        for column, key in enumerate(self.data):
-            for row, item in enumerate(self.data[key]):
-                newitem = QTableWidgetItem(item)
-                self.setItem(row, column, newitem)
-    # Переопределяем конструктор класса
-    def __init__(self):
-        # Обязательно нужно вызвать метод супер класса
-        QMainWindow.__init__(self)
-
-        self.setMinimumSize(QSize(640, 120))  # Устанавливаем размеры
-        self.setWindowTitle("Работа с QTableWidget")  # Устанавливаем заголовок окна
-        central_widget = QWidget(self)  # Создаём центральный виджет
-        self.setCentralWidget(central_widget)  # Устанавливаем центральный виджет
-        grid_layout = QGridLayout()  # Создаём QGridLayout
-        central_widget.setLayout(grid_layout)  # Устанавливаем данное размещение в центральный виджет
-
-        table = QTableWidget(self)  # Создаём таблицу
-        table.setColumnCount(5)  # Устанавливаем три колонки
-        table.setRowCount(len(data))  # и одну строку в таблице
-
-        # Устанавливаем заголовки таблицы
-        table.setHorizontalHeaderLabels(["Город", "Страна", "Ширина","Долгота","???"])
-
-        # Устанавливаем всплывающие подсказки на заголовки
-        table.horizontalHeaderItem(0).setToolTip("Город")
-        table.horizontalHeaderItem(1).setToolTip("Страна")
-        table.horizontalHeaderItem(2).setToolTip("Ширина")
-        table.horizontalHeaderItem(3).setToolTip("Ширина")
-        table.horizontalHeaderItem(4).setToolTip("Ширина")
-
-        # Устанавливаем выравнивание на заголовки
-        table.horizontalHeaderItem(0).setTextAlignment(Qt.AlignHCenter)
-        table.horizontalHeaderItem(1).setTextAlignment(Qt.AlignHCenter)
-        table.horizontalHeaderItem(2).setTextAlignment(Qt.AlignHCenter)
-        table.horizontalHeaderItem(3).setTextAlignment(Qt.AlignHCenter)
-        table.horizontalHeaderItem(4).setTextAlignment(Qt.AlignHCenter) #
-
-        # заполняем первую строку
-        i = 0
-        for index, city in data.items():
-            table.setItem(i, 0, QTableWidgetItem(city.name))
-            table.setItem(i, 1, QTableWidgetItem(city.country))
-            table.setItem(i, 2, QTableWidgetItem(city.coord.get('lon')))
-            table.setItem(i, 3, QTableWidgetItem(city.coord.get('lat')))
-            i += 1
-
-        # делаем ресайз колонок по содержимому
-        table.resizeColumnsToContents()
-
-        grid_layout.addWidget(table, 0, 0)  # Добавляем таблицу в сетку
-
-import sys
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    mw = MainWindow()
-    mw.show()
-    sys.exit(app.exec())
