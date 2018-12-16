@@ -1,6 +1,7 @@
 import urllib.request, os, gzip, shutil, json, urllib.error as er
 from configparser import ConfigParser, NoOptionError
 from termcolor import colored
+import requests
 
 
 def err_print(string):
@@ -129,6 +130,13 @@ def check_install():  # Проверяем корректность устано
         err_print('    Не установлено значение атрибута "city_file"')
         return False
     ok_print('Проверено успешно')
+
+    try:
+        key = cfg.get('Settings', 'api_key')
+        ok_print('API-Key Успешно установлен')
+    except NoOptionError:
+        err_print('Не установлен API-Key!')
+        return False
     return True
 
 
@@ -175,17 +183,36 @@ def ask_request_city(indata):
         else:
             ask_request_city(indata)
     else:
-        print('Нашлось дохуя, подумаю завтра')
-    #     print(str(num) + ': '+i.name)
+        ask_print('Нашлось {} городов. Введите номер нужного:'.format(len_result))
+        check = int(input())
+        while check < 0 or check > len_result:
+            err_print('Некорректный номер. Ожидаем значение от 1 до {}'.format(len_result))
+            check = int(input())
+        print(result[check-1].country + ', ' + result[check-1].name)
+        return result[check-1]
+
+
+def send_request(city):
+    try:
+        res = requests.get("http://api.openweathermap.org/data/2.5/weather",
+                           params={'id': city.id,
+                                   'units': 'metric',
+                                   'lang': 'ru',
+                                   'APPID': cfg.get('Settings','api_key')})
+        print(res.content)
+    except requests.ConnectionError as e:
+        err_print('Exception', e)
+
 
 
 if not check_install():
     print('Проверка целостности файлов не пройдена')
     install()
-cfg = getcfgparam()
-data = read_city_list(cfg.get('Settings', 'city_file'))
-
-ask_request_city(data)
+else:
+    cfg = getcfgparam()
+    data = read_city_list(cfg.get('Settings', 'city_file'))
+    ask_city = ask_request_city(data)
+    send_request(ask_city)
 
 # read_city_list('./kim_weather/city/city_list.json')
 # in_city = input("Введите интересующий город\n")
